@@ -1,0 +1,270 @@
+#!/bin/bash
+
+function create {
+
+echo "enter the table name"
+read file;
+while [ -e $file ]
+do
+echo "this name is already exist enter another name"
+read file
+done
+touch $file
+touch ${file}_count
+echo "enter the number of fields"
+read count
+echo "$count" > ${file}_count
+j=1
+
+###p.k
+
+if [ $j -eq 1 ]
+then
+echo "note this field will be the primary key and it must be unique and not null"
+echo "enter the field name"
+read y
+echo ${z} $y > $file
+j=$((j+1))
+h=`echo ${z} $y`
+z=$h
+fi
+
+#### other fields
+
+while [[ $j -le $count && $j != 1 ]]
+do
+echo "enter the field name"
+read y
+echo ${z} $y > $file
+#j=$((j+1))
+h=`echo ${z} $y`
+z=$h
+echo "enter the data type of the field"
+read datatype
+echo ${c} $datatype > filedatatype
+v=`echo ${c} $datatype`
+c=$v
+j=$((j+1))
+done }
+
+###insert###
+
+function insert {
+echo "enter the table name"
+read file
+if [ -e $file ]
+then
+k=1
+count=$(cat ${file}_count)
+
+# this code for p.k
+
+touch unique
+while [ $k -eq 1 ]
+do
+echo "this field is the primary key and shoud be digit and unique value please enter yor data"
+read l
+if [[ $l =~ ^[[:digit:]]*$ && $l != "" ]]
+then
+a=`grep $l unique`
+if [[ $a -eq "" ]]
+then
+echo $l >> unique
+echo ${m} $l > exam
+k=$((k+1))
+n=`echo ${m} $l`
+m=$n
+#cat exam >> $file
+m="" 
+else
+echo "the digit you enter is exist befor "
+fi
+#k=$((k+1))
+fi
+done
+#############################
+# this code for other fields
+#k=2
+while [[ $k -le $count && $k != 1 ]]
+do
+echo "enter the data"
+read l
+while [ $l == "" ]
+do
+echo "you must insert data"
+read l
+done
+if [[ $l =~ ^[[:digit:]]*$ ]]
+then
+echo digit
+var=`echo digit`
+w=$((k-1))
+u=`cut -f $w -d " " filedatatype`
+if [ $var == $u ]
+then
+echo ${m} $l > exam
+k=$((k+1))
+n=`echo ${m} $l`
+m=$n
+fi
+#cat exam >> $file
+#m=""
+
+elif [[ $l =~ ^[[:alpha:]]*$ ]]
+then
+echo alpha
+var=`echo alpha`
+w=$((k-1))
+u=`cut -f $w -d " " filedatatype`
+if [ $var == $u ]
+then
+echo ${m} $l > exam
+k=$((k+1))
+n=`echo ${m} $l`
+m=$n
+fi
+
+elif [[ $l =~ ^[[:alnum:]]*$ ]]
+then
+echo alnum
+var=`echo alnum`
+w=$((k-1))
+u=`cut -f $w -d " " filedatatype`
+if [ $var == $u ]
+then
+echo ${m} $l > exam
+k=$((k+1))
+n=`echo ${m} $l`
+m=$n
+fi
+
+else
+echo "your enter doesn't match with your data type"
+fi
+#cat exam >> $file
+#echo ${m} $l > exam
+#k=$((k+1))
+#n=`echo ${m} $l`
+#m=$n
+done
+cat exam >> $file
+m=""
+else
+echo  "this table doesn't exist"
+cat exam >> $file
+fi  }
+
+###display###
+
+function display {
+echo "enter name of the table that you want display it"
+read file
+if [ -e $file ]
+then
+cat $file 
+else
+echo "this table doesn't exist"
+fi
+}
+
+###alter###
+
+function alter {
+select o in add_field delete_field rename_table exit
+do
+case $o in
+add_field) echo "enter the table name"
+read file
+if [ -e $file ]
+then
+echo "enter the field name"
+read field
+head -n 1 $file | sed "s/$/ $field/" > ${file}_add
+sed '1d' $file >> ${file}_add
+cp ${file}_add $file
+count=$(cat ${file}_count)
+count=$((count+1))
+echo "$count" > ${file}_count
+else 
+echo "this table doesn't exist"
+fi ;;
+delete_field) echo "enter the table name"
+read file
+if [ -e $file ]
+then
+echo "enter the order of field that you want to delete it"
+read order
+count=$(cat ${file}_count)
+if [[ $older -le $count ]]
+then
+sed -i -r "s/\S+//$order" $file
+count=$((count-1))
+echo "$count" > ${file}_count
+count=$(cat ${file}_count)
+else
+echo "this field doesn't exist"
+fi
+else
+echo "this table doesn't exist"
+fi ;;
+rename_table) echo "enter the name of the table that you want to rename it"
+read file;
+if [ -e $file ]
+then
+echo "enter the new name"
+read rename
+mv $file $rename
+else
+echo "the name of table you enter doesn't exist enter a correct name"
+fi ;;
+exit) break ;;
+esac
+done
+}
+
+############################################################################### pattern according to p.k
+
+function search {
+echo "enter the table name"
+read file 
+if [ -e $file ]
+then
+echo "enter the number of record you want to get informatin about it"
+read pattern
+grep ^$pattern $file | cut -f 2- -d " " 
+else
+echo "the table you enter doesn't exist"
+fi
+}
+###############################################################################
+
+echo "		     DBMS"
+select x in create_table alter_table insert_record delete_record search display update_record drop_table truncate_table exit
+do
+case $x in 
+create_table) create ;;
+alter_table) alter ;;
+insert_record) insert  ;;
+delete_record) echo "enter the table name";
+read file;
+echo "enter the order of record that you want to delete it";
+read q;
+if [[ $q -gt 1 && $q != 1 ]]
+then
+sed -i "${q} d" $file
+else
+echo "please enter the correct order of record"
+fi ;;
+search) search ;;
+display) display ;;
+update_record) echo 7 ;;
+drop_table) echo "enter the table name that U want to drop it";
+read file;
+rm $file;
+echo "the table deleted" ;;
+truncate_table) echo "enter the table name that U want to delete its data";
+read file;
+sed -i '1p;d' $file  ;;
+exit) break ;;
+esac
+done
